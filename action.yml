@@ -34,7 +34,9 @@ runs:
         CREDIMI_APK_FILE: ${{ inputs.apk-file }}
         CREDIMI_APK_URL: ${{ inputs.apk-url }}
         CREDIMI_API_BASE_URL: ${{ inputs.api-base-url }}
-        COMMIT_SHA: ${{ github.sha }}
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: |
         echo "::add-mask::${CREDIMI_API_KEY}"
+        echo "::add-mask::${GITHUB_TOKEN}"
         "${GITHUB_ACTION_PATH}/script.sh"
