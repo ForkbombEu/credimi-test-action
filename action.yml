@@ -1,0 +1,40 @@
+name: 🧪 credimi-tests
+description: Test your wallet, credential issuer or verifier with credimi pipelines.
+
+inputs:
+  api-key:
+    description: Credimi API key
+    required: true
+  pipeline-id:
+    description: Credimi pipeline id to run
+    required: true
+  runner-id:
+    description: Credimi runner id
+    required: true
+  apk-file:
+    description: Path to local apk
+    required: false
+  apk-url:
+    description: Url where to fetch apk
+    required: false
+  api-base-url:
+    description: Credimi API base URL
+    required: false
+    default: https://credimi.io
+
+runs:
+  using: composite
+  steps:
+    - name: Run Credimi pipeline
+      shell: bash
+      env:
+        CREDIMI_API_KEY: ${{ inputs.api-key }}
+        CREDIMI_PIPELINE_ID: ${{ inputs.pipeline-id }}
+        CREDIMI_RUNNER_ID: ${{ inputs.runner-id }}
+        CREDIMI_APK_FILE: ${{ inputs.apk-file }}
+        CREDIMI_APK_URL: ${{ inputs.apk-url }}
+        CREDIMI_API_BASE_URL: ${{ inputs.api-base-url }}
+        COMMIT_SHA: ${{ github.sha }}
+      run: |
+        echo "::add-mask::${CREDIMI_API_KEY}"
+        "${GITHUB_ACTION_PATH}/script.sh"
