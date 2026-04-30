@@ -40,3 +40,4 @@ runs:
         echo "::add-mask::${CREDIMI_API_KEY}"
         echo "::add-mask::${GITHUB_TOKEN}"
         "${GITHUB_ACTION_PATH}/script.sh"
+ 

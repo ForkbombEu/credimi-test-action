@@ -1,0 +1,27 @@
+name: credimi-tests test
+on:
+  pull_request:
+    paths-ignore:
+      - README.md
+    branches:
+      - main
+  push:
+    paths-ignore:
+      - README.md
+    branches:
+      - main
+
+jobs:
+  credimi:
+    runs-on: ubuntu-latest
+    name: 🧪 Test a pipeline using local eudiw wallet
+    steps:
+      - name: 🛎️  Checkout
+        uses: actions/checkout@v6
+      - name: 🧪 Run the pipeline
+        uses: ./
+        with:
+          api-key: ${{ secrets.CREDIMI_API_KEY }}
+          pipeline-id: forkbomb-bv-andrea/eudiw-12-34-webuild-conformance-check
+          runner-id: forkbomb-bv-andrea/android-cloud-credimi-1
+          apk-url: https://github.com/eu-digital-identity-wallet/eudi-app-android-wallet-ui/releases/download/Wallet%2FDemo_Version%3D2026.02.35-Demo_Build%3D35/2026.02.35-Demo.apk
