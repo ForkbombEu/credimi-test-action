@@ -101,17 +101,56 @@ fi
 if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request"* ]]; then
   pr_number="$(jq -r '.pull_request.number // empty' "${GITHUB_EVENT_PATH}")"
   comments_url="${GITHUB_API_URL:-https://api.github.com}/repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments"
+  commit_sha="$(jq -r --arg fallback "${GITHUB_SHA:-}" '.sha // $fallback // empty' <<< "${github_context}")"
   comment_url="${run_url:-$pipeline_url}"
-  comment_body="Track your [pipeline execution](${comment_url})"
 
-  if [[ -n "${pr_number}" ]]; then
+  if [[ -n "${pr_number}" && -n "${commit_sha}" ]]; then
+    comments_response="$(curl --fail-with-body --silent --show-error \
+      --get \
+      --data-urlencode "per_page=100" \
+      --request GET "${comments_url}" \
+      --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+      --header "Accept: application/vnd.github+json" \
+      --header "X-GitHub-Api-Version: 2022-11-28")"
+
+    marker="<!-- credimi-test-action -->"
+    existing_body="$(jq -r --arg marker "${marker}" 'map(select(.body | contains($marker))) | last | .body // empty' <<< "${comments_response}")"
+    update_url="$(jq -r --arg marker "${marker}" 'map(select(.body | contains($marker))) | last | .url // empty' <<< "${comments_response}")"
+
+    comment_body="$(
+      jq -rn \
+        --arg existing_body "${existing_body}" \
+        --arg marker "${marker}" \
+        --arg commit_sha "${commit_sha}" \
+        --arg comment_url "${comment_url}" \
+        '
+        def run_lines:
+          $existing_body
+          | split("\n")
+          | map(select(startswith("- `") and (contains("`" + $commit_sha + "`") | not)));
+
+        (
+          ["Track your Credimi pipeline runs:", ""]
+          + (run_lines + ["- `" + $commit_sha + "`: " + $comment_url])
+          + ["", $marker]
+        ) | join("\n")
+        '
+    )"
+
+    request_method="POST"
+    request_url="${comments_url}"
+    if [[ -n "${update_url}" ]]; then
+      request_method="PATCH"
+      request_url="${update_url}"
+    fi
+
     jq -n --arg body "${comment_body}" '{body: $body}' \
       | curl --fail-with-body --silent --show-error \
-          --request POST "${comments_url}" \
-          --header "Authorization: Bearer ${GITHUB_TOKEN}" \
-          --header "Accept: application/vnd.github+json" \
-          --header "X-GitHub-Api-Version: 2022-11-28" \
-          --header "Content-Type: application/json" \
-          --data @-
+        --request "${request_method}" "${request_url}" \
+        --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+        --header "Accept: application/vnd.github+json" \
+        --header "X-GitHub-Api-Version: 2022-11-28" \
+        --header "Content-Type: application/json" \
+        --data @-
   fi
 fi
