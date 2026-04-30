@@ -132,7 +132,7 @@ if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request"* ]]; then
           | map(select(startswith("- `") and (contains("credimi-run:" + $commit_sha) | not)));
 
         (
-          ["Track your Credimi pipeline runs:", ""]
+          ["## 🧪 Credimi Pipeline Execution", ""]
           + (run_lines + ["- `" + $short_commit_sha + "`: [pipeline execution](" + $comment_url + ") <!-- credimi-run:" + $commit_sha + " -->"])
           + ["", $marker]
         ) | join("\n")
