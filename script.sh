@@ -100,18 +100,61 @@ fi
 
 if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request"* ]]; then
   pr_number="$(jq -r '.pull_request.number // empty' "${GITHUB_EVENT_PATH}")"
+  commit_sha="${GITHUB_SHA:-}"
   comments_url="${GITHUB_API_URL:-https://api.github.com}/repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments"
   comment_url="${run_url:-$pipeline_url}"
-  comment_body="Track your [pipeline execution](${comment_url})"
+  comment_marker="<!-- credimi-test-action -->"
+  new_line="- \`${commit_sha}\`: [pipeline execution](${comment_url})"
 
   if [[ -n "${pr_number}" ]]; then
-    jq -n --arg body "${comment_body}" '{body: $body}' \
-      | curl --fail-with-body --silent --show-error \
-          --request POST "${comments_url}" \
+    # Look for an existing comment from this action, paginating through all pages
+    existing_comment=""
+    page=1
+    max_pages=10
+    while [[ -z "${existing_comment}" && "${page}" -le "${max_pages}" ]]; do
+      page_comments="$(curl --fail-with-body --silent --show-error \
+          --request GET "${comments_url}?per_page=100&page=${page}" \
           --header "Authorization: Bearer ${GITHUB_TOKEN}" \
           --header "Accept: application/vnd.github+json" \
-          --header "X-GitHub-Api-Version: 2022-11-28" \
-          --header "Content-Type: application/json" \
-          --data @-
+          --header "X-GitHub-Api-Version: 2022-11-28")"
+      page_count="$(jq 'length' <<< "${page_comments}")"
+      if [[ "${page_count}" == "0" ]]; then
+        break
+      fi
+      existing_comment="$(jq -r --arg marker "${comment_marker}" \
+          'map(select(.body | startswith($marker))) | first // empty' <<< "${page_comments}")"
+      if [[ "${page_count}" -lt 100 ]]; then
+        break
+      fi
+      ((page++))
+    done
+
+    if [[ -n "${existing_comment}" ]]; then
+      existing_body="$(jq -r '.body' <<< "${existing_comment}")"
+      comment_id="$(jq -r '.id' <<< "${existing_comment}")"
+      updated_body="${existing_body}
+${new_line}"
+      issue_comment_url="${GITHUB_API_URL:-https://api.github.com}/repos/${GITHUB_REPOSITORY}/issues/comments/${comment_id}"
+      jq -n --arg body "${updated_body}" '{body: $body}' \
+        | curl --fail-with-body --silent --show-error \
+            --request PATCH "${issue_comment_url}" \
+            --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --header "Content-Type: application/json" \
+            --data @-
+    else
+      comment_body="${comment_marker}
+## 🧪 Credimi Pipeline Executions
+${new_line}"
+      jq -n --arg body "${comment_body}" '{body: $body}' \
+        | curl --fail-with-body --silent --show-error \
+            --request POST "${comments_url}" \
+            --header "Authorization: Bearer ${GITHUB_TOKEN}" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --header "Content-Type: application/json" \
+            --data @-
+    fi
   fi
 fi
