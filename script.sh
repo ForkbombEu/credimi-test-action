@@ -101,7 +101,7 @@ fi
 if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request"* ]]; then
   pr_number="$(jq -r '.pull_request.number // empty' "${GITHUB_EVENT_PATH}")"
   comments_url="${GITHUB_API_URL:-https://api.github.com}/repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments"
-  commit_sha="$(jq -r --arg fallback "${GITHUB_SHA:-}" '.sha // $fallback // empty' <<< "${github_context}")"
+  commit_sha="$(jq -r --arg fallback "${GITHUB_SHA:-}" '.pull_request.head.sha // .sha // $fallback // empty' "${GITHUB_EVENT_PATH}")"
   comment_url="${run_url:-$pipeline_url}"
 
   if [[ -n "${pr_number}" && -n "${commit_sha}" ]]; then
