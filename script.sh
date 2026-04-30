@@ -102,6 +102,7 @@ if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request"* ]]; then
   pr_number="$(jq -r '.pull_request.number // empty' "${GITHUB_EVENT_PATH}")"
   comments_url="${GITHUB_API_URL:-https://api.github.com}/repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments"
   commit_sha="$(jq -r --arg fallback "${GITHUB_SHA:-}" '.pull_request.head.sha // .sha // $fallback // empty' "${GITHUB_EVENT_PATH}")"
+  short_commit_sha="${commit_sha:0:7}"
   comment_url="${run_url:-$pipeline_url}"
 
   if [[ -n "${pr_number}" && -n "${commit_sha}" ]]; then
@@ -122,16 +123,17 @@ if [[ "${GITHUB_EVENT_NAME:-}" == "pull_request"* ]]; then
         --arg existing_body "${existing_body}" \
         --arg marker "${marker}" \
         --arg commit_sha "${commit_sha}" \
+        --arg short_commit_sha "${short_commit_sha}" \
         --arg comment_url "${comment_url}" \
         '
         def run_lines:
           $existing_body
           | split("\n")
-          | map(select(startswith("- `") and (contains("`" + $commit_sha + "`") | not)));
+          | map(select(startswith("- `") and (contains("credimi-run:" + $commit_sha) | not)));
 
         (
           ["Track your Credimi pipeline runs:", ""]
-          + (run_lines + ["- `" + $commit_sha + "`: " + $comment_url])
+          + (run_lines + ["- `" + $short_commit_sha + "`: [pipeline execution](" + $comment_url + ") <!-- credimi-run:" + $commit_sha + " -->"])
           + ["", $marker]
         ) | join("\n")
         '
