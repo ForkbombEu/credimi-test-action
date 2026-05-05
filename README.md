@@ -15,8 +15,6 @@ Credimi helps teams validate identity and credential flows automatically instead
 
 ## Pull request comments
 
-This action no longer writes comments on pull requests directly.
-
 Pull request comments are handled by the **Credimi CI** GitHub App. Install it for your organization or a single repository from:
 
 https://github.com/apps/credimi-ci/installations/new
@@ -52,7 +50,7 @@ jobs:
   credimi:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Build your APK before running Credimi.
       # Replace this with your project build command.
