@@ -1,8 +1,6 @@
 name: credimi-tests test
 on:
   pull_request:
-    paths-ignore:
-      - README.md
     branches:
       - main
   push:
