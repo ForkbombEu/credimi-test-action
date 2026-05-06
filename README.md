@@ -22,7 +22,7 @@ This action starts a Credimi pipeline execution and passes GitHub workflow metad
 
 ---
 
-<div id="tocs">
+<div id="toc">
 
 ### 🚩 Table of contents <!-- omit in toc -->
 
@@ -114,8 +114,12 @@ jobs:
 
 Exactly one of `apk-file` or `apk-url` must be provided.
 
+**[🔝 back to top](#toc)**
+
 ---
 ## 🗞️ More information
 
 - Credimi project: https://github.com/ForkbombEu/credimi
 - Credimi CI app installation: https://github.com/apps/credimi-ci/installations/new
+
+**[🔝 back to top](#toc)**
