@@ -81,6 +81,11 @@ jobs:
 ### 🌐 Test an APK by URL
 
 ```yaml
+name: Credimi tests
+
+on:
+  workflow_dispatch:
+
 jobs:
   credimi:
     runs-on: ubuntu-latest
