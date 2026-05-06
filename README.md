@@ -3,7 +3,7 @@
   <img
     src="./images/credimi_logo.svg"
     alt="C"
-    height="48"/> redimi Test Action
+    height="48"/>redimi Test Action
 </h1>
 
 ### Run [Credimi](https://github.com/ForkbombEu/credimi) pipelines from GitHub Actions to test wallets as part of your CI workflow. <!-- omit in toc --> 
@@ -13,7 +13,7 @@
 <br>
 
 This action starts a Credimi pipeline execution and passes GitHub workflow metadata to Credimi so runs can be traced back to the repository, workflow, commit, and pull request that triggered them. It helps teams validate identity and credential flows automatically instead of relying only on manual QA. You can use this action to:
-- Run the same credential tests on every pull request or release build.
+- Run the same credential tests on every pull request.
 - Test mobile wallet APKs before they are distributed.
 - Keep CI failures tied to the exact commit and workflow run that produced them.
 <!--- Check issuer and verifier behavior against reusable Credimi pipelines.-->
