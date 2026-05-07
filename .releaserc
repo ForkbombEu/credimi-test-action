@@ -1,0 +1,10 @@
+{
+  "repositoryUrl": "git@github.com:forkbombeu/credimi-test-action.git",
+  "plugins": [
+    "@semantic-release/commit-analyzer",
+    "@semantic-release/release-notes-generator"
+  ],
+  "branches": [
+    "main"
+  ]
+}
