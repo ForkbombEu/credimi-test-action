@@ -20,6 +20,14 @@ jobs:
         uses: ./
         with:
           api-key: ${{ secrets.CREDIMI_API_KEY }}
-          pipeline-id: forkbomb-bv-andrea/eudiw-12-34-webuild-conformance-check
-          runner-type: android_emulator
           apk-url: https://github.com/eu-digital-identity-wallet/eudi-app-android-wallet-ui/releases/download/Wallet%2FDemo_Version%3D2026.02.35-Demo_Build%3D35/2026.02.35-Demo.apk
+          pipeline-ids: |
+            forkbomb-bv-andrea/eudiw-12-34-webuild-conformance-check
+            forkbomb-bv-andrea/eudiw-2026-02-35-get-pid-sd-jwt-vc-issuer-backend
+          runner-types: |
+            android_emulator
+            redroid
+          extra-runs: |
+            forkbomb-bv-andrea/eudiw-2026-02-35-pid-issue-x2-and-verify-x1-issuer-eudiw-dev-test1 forkbomb-bv-andrea/pixel-android16-a2
+          exclude-runs: |
+            forkbomb-bv-andrea/eudiw-12-34-webuild-conformance-check android_emulator

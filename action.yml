@@ -3,40 +3,66 @@ description: Test your wallet, credential issuer or verifier with credimi pipeli
 
 inputs:
   api-key:
-    description: Credimi API key
+    description: Credimi API key used to authenticate requests.
     required: true
-  pipeline-id:
-    description: Credimi pipeline id to run
-    required: true
-  runner-type:
-    description: |
-      Credimi runner type
-      Possible values: android_emulator, redroid, android_phone, ios_simulator
-    required: true
-  runner-id:
-    description: Credimi runner id
-    required: false
   apk-file:
-    description: Path to local apk
+    description: |
+      Path to a local APK file to upload.
+      Exactly one of apk-file or apk-url must be provided.
     required: false
   apk-url:
-    description: Url where to fetch apk
+    description: |
+      URL of an APK that Credimi can download.
+      Exactly one of apk-file or apk-url must be provided.
+    required: false
+  pipeline-ids:
+    description: |
+      Credimi pipeline identifiers to run, separated by new lines.
+      Each identifier is usually formatted as "organization/pipeline".
+    required: true
+  runner-types:
+    description: |
+      Credimi runner types to use, separated by new lines.
+      The action runs every pipeline-id on every listed runner type.
+      Exactly one of runner-types or runner-ids must be provided.
+      Possible values: android_emulator, redroid, android_phone, ios_simulator
+    required: false
+  runner-ids:
+    description: |
+      Credimi runner ids with their runner type, separated by new lines.
+      Each line must be formatted as "<runner-id>/<runner-type>".
+      The action runs every pipeline-id on every listed runner id.
+      Exactly one of runner-types or runner-ids must be provided.
+      Possible runner-type values: android_emulator, redroid, android_phone, ios_simulator
+    required: false
+  extra-runs:
+    description: |
+      Additional runs to add after the cartesian product is built, separated by new lines.
+      Each line must contain "<pipeline-id> <runner-type>" or "<pipeline-id> <runner-id>/<runner-type>".
+    required: false
+  exclude-runs:
+    description: |
+      Runs to remove after extra-runs are added, separated by new lines.
+      Each line must contain "<pipeline-id> <runner-type>" or "<pipeline-id> <runner-id>/<runner-type>".
+      Exclusions match exact pipeline/runner pairs.
     required: false
   api-base-url:
-    description: Credimi API base URL
+    description: Credimi API base URL.
     required: false
     default: https://credimi.io
 
 runs:
   using: composite
   steps:
-    - name: Run Credimi pipeline
+    - name: Run Credimi pipelines
       shell: bash
       env:
         CREDIMI_API_KEY: ${{ inputs.api-key }}
-        CREDIMI_PIPELINE_ID: ${{ inputs.pipeline-id }}
-        CREDIMI_RUNNER_TYPE: ${{ inputs.runner-type }}
-        CREDIMI_RUNNER_ID: ${{ inputs.runner-id }}
+        CREDIMI_PIPELINE_IDS: ${{ inputs.pipeline-ids }}
+        CREDIMI_RUNNER_TYPES: ${{ inputs.runner-types }}
+        CREDIMI_EXTRA_RUNS: ${{ inputs.extra-runs }}
+        CREDIMI_EXCLUDE_RUNS: ${{ inputs.exclude-runs }}
+        CREDIMI_RUNNER_IDS: ${{ inputs.runner-ids }}
         CREDIMI_APK_FILE: ${{ inputs.apk-file }}
         CREDIMI_APK_URL: ${{ inputs.apk-url }}
         CREDIMI_API_BASE_URL: ${{ inputs.api-base-url }}
