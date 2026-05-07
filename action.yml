@@ -8,9 +8,14 @@ inputs:
   pipeline-id:
     description: Credimi pipeline id to run
     required: true
+  runner-type:
+    description: |
+      Credimi runner type
+      Possible values: android_emulator, redroid, android_phone, ios_simulator
+    required: true
   runner-id:
     description: Credimi runner id
-    required: true
+    required: false
   apk-file:
     description: Path to local apk
     required: false
@@ -30,6 +35,7 @@ runs:
       env:
         CREDIMI_API_KEY: ${{ inputs.api-key }}
         CREDIMI_PIPELINE_ID: ${{ inputs.pipeline-id }}
+        CREDIMI_RUNNER_TYPE: ${{ inputs.runner-type }}
         CREDIMI_RUNNER_ID: ${{ inputs.runner-id }}
         CREDIMI_APK_FILE: ${{ inputs.apk-file }}
         CREDIMI_APK_URL: ${{ inputs.apk-url }}

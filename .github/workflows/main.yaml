@@ -21,5 +21,5 @@ jobs:
         with:
           api-key: ${{ secrets.CREDIMI_API_KEY }}
           pipeline-id: forkbomb-bv-andrea/eudiw-12-34-webuild-conformance-check
-          runner-id: forkbomb-bv-andrea/android-cloud-credimi-1
+          runner-type: android_emulator
           apk-url: https://github.com/eu-digital-identity-wallet/eudi-app-android-wallet-ui/releases/download/Wallet%2FDemo_Version%3D2026.02.35-Demo_Build%3D35/2026.02.35-Demo.apk
