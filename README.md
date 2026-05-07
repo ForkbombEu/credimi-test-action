@@ -43,8 +43,10 @@ Follow these steps:
 1. Install the [Credimi CI GitHub App](https://github.com/apps/credimi-ci/installations/new) for your organization or a single repository to let Credimi add PR feedback for pipeline runs triggered by this action.
 2. If you do not have an account on [Credimi](https://credimi.io), create one.
 3. Create your [Credimi API key](https://credimi.io/my/profile/api-keys) and add it to GitHub as a repository or organization secret named `CREDIMI_API_KEY`.
-4. Create or choose a [Credimi pipeline](https://credimi.io/my/pipelines) and a runner in Credimi.
-5. Lastly use this action in a workflow that runs on PR. See the [next section](#-usage) for more information.
+4. Create or choose a [Credimi pipeline](https://credimi.io/my/pipelines) and copy its id (form as org/pipeline)
+5. Choose runner type between `android_emulator`, `redroid`, `android_phone` and `ios_simulator`.
+6. For more advance usage you can also choose to use a specific runner by using the runner-id input.
+7. Lastly use this action in a workflow that runs on PR. See the [next section](#-usage) for more information.
 
 **[🔝 back to top](#toc)**
 
@@ -74,7 +76,8 @@ jobs:
         with:
           api-key: ${{ secrets.CREDIMI_API_KEY }}
           pipeline-id: your-org/your-pipeline
-          runner-id: your-org/your-runner
+          runner-type: android_emulator
+          runner-id: your-org/your-runner (optional)
           apk-file: app/build/outputs/apk/debug/app-debug.apk
 ```
 
@@ -94,7 +97,8 @@ jobs:
         with:
           api-key: ${{ secrets.CREDIMI_API_KEY }}
           pipeline-id: your-org/your-pipeline
-          runner-id: your-org/your-runner
+          runner-type: android_emulator
+          runner-id: your-org/your-runner (optional)
           apk-url: https://example.com/path/to/app.apk
 ```
 
@@ -107,7 +111,8 @@ jobs:
 | -------------- | -------- | ------------------------------------------------------------------ |
 | `api-key`      | Yes      | Credimi API key. Store it as a GitHub Actions secret.              |
 | `pipeline-id`  | Yes      | Credimi pipeline identifier, for example `your-org/your-pipeline`. |
-| `runner-id`    | Yes      | Credimi runner identifier, for example `your-org/your-runner`.     |
+| `runner-type`  | Yes      | Credimi runner type. One of `android_emulator`, `redroid`, `android_phone`, `ios_simulator`. |
+| `runner-id`    | No       | Credimi runner identifier, for example `your-org/your-runner`.     |
 | `apk-file`     | No       | Path to a locally built APK artifact in the workflow workspace.    |
 | `apk-url`      | No       | URL where Credimi can fetch the APK.                               |
 | `api-base-url` | No       | Credimi API base URL. Defaults to `https://credimi.io`.            |
