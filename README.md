@@ -95,7 +95,7 @@ jobs:
       # Replace this with your project build command.
       - run: ./gradlew assembleDebug
 
-      - uses: forkbombeu/credimi-test-action@main
+      - uses: forkbombeu/credimi-test-action@v1
         with:
           api-key: ${{ secrets.CREDIMI_API_KEY }}
           pipeline-ids: |
@@ -123,7 +123,7 @@ jobs:
   credimi:
     runs-on: ubuntu-latest
     steps:
-      - uses: forkbombeu/credimi-test-action@main
+      - uses: forkbombeu/credimi-test-action@v1
         with:
           api-key: ${{ secrets.CREDIMI_API_KEY }}
           pipeline-ids: |
@@ -179,7 +179,7 @@ By default, Credimi selects an available runner that matches each requested `run
 Each `runner-ids` line must end with the runner type: `<runner-id>/<runner-type>`.
 
 ```yaml
-- uses: forkbombeu/credimi-test-action@main
+- uses: forkbombeu/credimi-test-action@v1
   with:
     api-key: ${{ secrets.CREDIMI_API_KEY }}
     pipeline-ids: |
@@ -198,7 +198,7 @@ This starts one run for each pipeline and each listed specific runner.
 Use `extra-runs` to add runs outside the generated cartesian product. Use `exclude-runs` to remove exact runs after extras are added.
 
 ```yaml
-- uses: forkbombeu/credimi-test-action@main
+- uses: forkbombeu/credimi-test-action@v1
   with:
     api-key: ${{ secrets.CREDIMI_API_KEY }}
     pipeline-ids: |
@@ -221,7 +221,7 @@ In this example, the action starts the generated pipeline/runner-type combinatio
 The action sends requests to `https://credimi.io` by default. Use `api-base-url` only when you need to target another Credimi environment, such as a staging or self-hosted instance.
 
 ```yaml
-- uses: forkbombeu/credimi-test-action@main
+- uses: forkbombeu/credimi-test-action@v1
   with:
     api-key: ${{ secrets.CREDIMI_API_KEY }}
     pipeline-ids: |
