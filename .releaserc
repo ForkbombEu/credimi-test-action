@@ -1,8 +1,9 @@
 {
-  "repositoryUrl": "git@github.com:forkbombeu/credimi-test-action.git",
+  "repositoryUrl": "https://github.com/forkbombeu/credimi-test-action.git",
   "plugins": [
     "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator"
+    "@semantic-release/release-notes-generator",
+    "semantic-release-major-tag"
   ],
   "branches": [
     "main"

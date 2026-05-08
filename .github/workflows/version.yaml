@@ -1,7 +1,7 @@
 name: 🚦 Update version
 
 permissions:
-    contents: write
+  contents: write
 
 on:
   push:
@@ -22,5 +22,8 @@ jobs:
           fetch-depth: 0
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v6
+        with:
+          extra_plugins: |
+            semantic-release-major-tag
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
