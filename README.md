@@ -1,23 +1,22 @@
 <div align="center">
 
-  <img
+<img
     src="https://raw.githubusercontent.com/ForkbombEu/credimi-test-action/refs/heads/main/images/credimi_logo.svg"
     alt="credimi logo"
-    height="48"/> 
+    height="48"/>
 
+# Credimi Test Action <!-- omit in toc -->
 
-  # Credimi Test Action
-  
-### Run [Credimi](https://github.com/ForkbombEu/credimi) pipelines from GitHub Actions to test wallets as part of your CI workflow. <!-- omit in toc --> 
-<!--, credential issuers, and verifiers-->
+### Run [Credimi](https://github.com/ForkbombEu/credimi) pipelines from GitHub Actions to test wallets as part of your CI workflow. <!-- omit in toc -->
+
 </div>
 
 <br>
 
 This action starts a Credimi pipeline execution and passes GitHub workflow metadata to Credimi so runs can be traced back to the repository, workflow, commit, and pull request that triggered them. It helps teams validate identity and credential flows automatically instead of relying only on manual QA. You can use this action to:
+
 - Test mobile apps built in CI using the same **automation pipeline(s)** on every pull request.
-- **Pinpoint bugs** and failures to the exact commit, **through the pipeline run(s)**  output.
-<!--- Check issuer and verifier behavior against reusable Credimi pipelines.-->
+- **Pinpoint bugs** and failures to the exact commit, **through the pipeline run(s)** output.
 
 <br>
 
@@ -43,6 +42,7 @@ This action starts a Credimi pipeline execution and passes GitHub workflow metad
 </div>
 
 ---
+
 ## 🏗️ Setup
 
 Follow these steps:
@@ -73,6 +73,7 @@ This copies the pipeline identifier that you will use in the `pipeline-ids` inpu
 **[🔝 back to top](#toc)**
 
 ---
+
 ## 🎮 Usage
 
 ### 📂 Test a locally built APK
@@ -106,6 +107,7 @@ jobs:
 ```
 
 This example starts two runs:
+
 - `your-org/your-pipeline` on runner of type `android_emulator`
 - `your-org/another-pipeline` on runner of type `android_emulator`
 
@@ -137,27 +139,26 @@ This example starts **4 pipeline runs**:
 
 1. `your-org/your-pipeline` on runner of type `android_emulator`
 1. `your-org/another-pipeline` on runner of type `android_emulator`
-1. `your-org/your-pipeline` on runner of type `redroid` 
+1. `your-org/your-pipeline` on runner of type `redroid`
 1. `your-org/another-pipeline` on runner of type `redroid`
-
-
 
 **[🔝 back to top](#toc)**
 
 ---
+
 ## ⌨️ Inputs
 
-| Input          | Required | Description                                                        |
-| -------------- | -------- | ------------------------------------------------------------------ |
-| `api-key`      | Yes      | Credimi API key. Store it as a GitHub Actions secret.              |
-| `pipeline-ids` | Yes      | Newline-separated Credimi pipeline identifiers, for example `your-org/your-pipeline`. |
-| `runner-types` | No       | Newline-separated runner types. One of `android_emulator`, `redroid`, `android_phone`, `ios_simulator`. |
-| `runner-ids`   | No       | Newline-separated specific runners formatted as `<runner-id>/<runner-type>`. |
+| Input          | Required | Description                                                                                                             |
+| -------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `api-key`      | Yes      | Credimi API key. Store it as a GitHub Actions secret.                                                                   |
+| `pipeline-ids` | Yes      | Newline-separated Credimi pipeline identifiers, for example `your-org/your-pipeline`.                                   |
+| `runner-types` | No       | Newline-separated runner types. One of `android_emulator`, `redroid`, `android_phone`, `ios_simulator`.                 |
+| `runner-ids`   | No       | Newline-separated specific runners formatted as `<runner-id>/<runner-type>`.                                            |
 | `extra-runs`   | No       | Newline-separated runs to add, formatted as `<pipeline-id> <runner-type>` or `<pipeline-id> <runner-id>/<runner-type>`. |
-| `exclude-runs` | No       | Newline-separated runs to remove, using the same format as `extra-runs`. Exclusions match exact runs. |
-| `apk-file`     | No       | Path to a locally built APK artifact in the workflow workspace.    |
-| `apk-url`      | No       | URL where Credimi can fetch the APK.                               |
-| `api-base-url` | No       | Credimi API base URL. Defaults to `https://credimi.io`.            |
+| `exclude-runs` | No       | Newline-separated runs to remove, using the same format as `extra-runs`. Exclusions match exact runs.                   |
+| `apk-file`     | No       | Path to a locally built APK artifact in the workflow workspace.                                                         |
+| `apk-url`      | No       | URL where Credimi can fetch the APK.                                                                                    |
+| `api-base-url` | No       | Credimi API base URL. Defaults to `https://credimi.io`.                                                                 |
 
 Exactly one of `apk-file` or `apk-url` must be provided.
 Exactly one of `runner-types` or `runner-ids` must be provided.
@@ -168,6 +169,7 @@ Then it adds `extra-runs`, removes `exclude-runs`, and sends one request to Cred
 **[🔝 back to top](#toc)**
 
 ---
+
 ## 🥷 Advanced usage
 
 ### 👟 Choose specific runners
@@ -233,6 +235,7 @@ The action sends requests to `https://credimi.io` by default. Use `api-base-url`
 **[🔝 back to top](#toc)**
 
 ---
+
 ## 🗞️ More information
 
 - Credimi project: https://github.com/ForkbombEu/credimi
