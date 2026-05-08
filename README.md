@@ -1,11 +1,13 @@
 <div align="center">
-<h1>
-  <img
-    src="./images/credimi_logo.svg"
-    alt="C"
-    height="48"/>redimi Test Action
-</h1>
 
+  <img
+    src="https://raw.githubusercontent.com/ForkbombEu/credimi-test-action/refs/heads/main/images/credimi_logo.svg"
+    alt="credimi logo"
+    height="48"/> 
+
+
+  # Credimi Test Action
+  
 ### Run [Credimi](https://github.com/ForkbombEu/credimi) pipelines from GitHub Actions to test wallets as part of your CI workflow. <!-- omit in toc --> 
 <!--, credential issuers, and verifiers-->
 </div>
@@ -55,7 +57,7 @@ Log in to Credimi and visit the [Credimi API key page](https://credimi.io/my/pro
 After you create a new key, save it in your GitHub organization or repository secrets under the name `CREDIMI_API_KEY`.
 
 <div align=center>
-<img src="./images/api_key.png" width=80% align=center/>
+<img src="https://raw.githubusercontent.com/ForkbombEu/credimi-test-action/refs/heads/main/images/api_key.png" width=80% align=center/>
 </div>
 
 ### 🔗 Choose a pipeline
@@ -65,7 +67,7 @@ Find the pipeline you want to run in CI, then click the copy button next to its 
 This copies the pipeline identifier that you will use in the `pipeline-ids` input.
 
 <div align=center>
-<img src="./images/pipeline.png" width=80% align=center/>
+<img src="https://raw.githubusercontent.com/ForkbombEu/credimi-test-action/refs/heads/main/images/pipeline.png" width=80% align=center/>
 </div>
 
 **[🔝 back to top](#toc)**
