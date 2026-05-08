@@ -13,9 +13,8 @@
 <br>
 
 This action starts a Credimi pipeline execution and passes GitHub workflow metadata to Credimi so runs can be traced back to the repository, workflow, commit, and pull request that triggered them. It helps teams validate identity and credential flows automatically instead of relying only on manual QA. You can use this action to:
-- Run the same credential tests on every pull request.
-- Test mobile wallet APKs before they are distributed.
-- Keep CI failures tied to the exact commit and workflow run that produced them.
+- Test mobile apps built in CI using the same **automation pipeline(s)** on every pull request.
+- **Pinpoint bugs** and failures to the exact commit, **through the pipeline run(s)**  output.
 <!--- Check issuer and verifier behavior against reusable Credimi pipelines.-->
 
 <br>
@@ -132,11 +131,13 @@ jobs:
           apk-url: https://example.com/path/to/app.apk
 ```
 
-This example starts four runs:
-- `your-org/your-pipeline` on runner of type `android_emulator`
-- `your-org/another-pipeline` on runner of type `android_emulator`
-- `your-org/your-pipeline` on runner of type `redroid`
-- `your-org/another-pipeline` on runner of type `redroid`
+This example starts **4 pipeline runs**:
+
+1. `your-org/your-pipeline` on runner of type `android_emulator`
+1. `your-org/another-pipeline` on runner of type `android_emulator`
+1. `your-org/your-pipeline` on runner of type `redroid` 
+1. `your-org/another-pipeline` on runner of type `redroid`
+
 
 
 **[🔝 back to top](#toc)**
