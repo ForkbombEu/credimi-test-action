@@ -66,7 +66,7 @@ make_run_key() {
 
 add_run() {
   local pipeline_id="$1"
-  local runner_type="$2"
+  local runner_type="${2:-}"
   local runner_id="${3:-}"
   local key
 
@@ -74,7 +74,7 @@ add_run() {
     err "pipeline id cannot be empty."
   fi
 
-  if ! is_valid_runner_type "${runner_type}"; then
+  if [[ -n "${runner_type}" ]] && ! is_valid_runner_type "${runner_type}"; then
     err "runner type must be one of: android_emulator, redroid, android_phone, ios_simulator."
   fi
 
@@ -92,7 +92,7 @@ add_run() {
 
 remove_run() {
   local pipeline_id="$1"
-  local runner_type="$2"
+  local runner_type="${2:-}"
   local runner_id="${3:-}"
   local key
 
@@ -104,6 +104,7 @@ add_runs_from_lines() {
   local lines="$1"
   local source_name="$2"
   local mode="$3"
+  local allow_pipeline_only="${4:-false}"
   local line pipeline_id runner_spec extra runner_id runner_type
 
   while IFS= read -r line || [[ -n "${line}" ]]; do
@@ -113,11 +114,21 @@ add_runs_from_lines() {
     fi
 
     read -r pipeline_id runner_spec extra <<< "${line}"
-    if [[ -z "${pipeline_id}" || -z "${runner_spec}" || -n "${extra:-}" ]]; then
+    if [[ -z "${pipeline_id}" || -n "${extra:-}" ]]; then
       err "each ${source_name} line must contain exactly: '<pipeline-id> <runner-type|runner-id/runner-type>'."
     fi
 
-    parse_runner_spec "${runner_spec}" runner_id runner_type
+    if [[ -z "${runner_spec}" ]]; then
+      if [[ "${allow_pipeline_only}" != true ]]; then
+        err "each ${source_name} line must contain exactly: '<pipeline-id> <runner-type|runner-id/runner-type>'."
+      fi
+
+      runner_id=""
+      runner_type=""
+    else
+      parse_runner_spec "${runner_spec}" runner_id runner_type
+    fi
+
     if [[ "${mode}" == "add" ]]; then
       add_run "${pipeline_id}" "${runner_type}" "${runner_id}"
     else
@@ -130,7 +141,7 @@ validate_target_inputs() {
   local has_apk_file=false
   local has_apk_url=false
   local has_issuer_url=false
-  local has_issuer_id=false
+  local has_credential_ids=false
 
   if ! is_blank "${CREDIMI_APK_FILE:-}"; then
     has_apk_file=true
@@ -144,24 +155,24 @@ validate_target_inputs() {
     has_issuer_url=true
   fi
 
-  if ! is_blank "${CREDIMI_ISSUER_ID:-}"; then
-    has_issuer_id=true
+  if ! is_blank "${CREDIMI_CREDENTIAL_IDS:-}"; then
+    has_credential_ids=true
   fi
 
   if [[ "${has_apk_file}" == true && "${has_apk_url}" == true ]]; then
     err "'apk-url' and 'apk-file' are mutually exclusive."
   fi
 
-  if [[ "${has_issuer_url}" != "${has_issuer_id}" ]]; then
-    err "'issuer-url' and 'issuer-id' must be provided together."
+  if [[ "${has_issuer_url}" != "${has_credential_ids}" ]]; then
+    err "'issuer-url' and 'credential-ids' must be provided together."
   fi
 
   if [[ ("${has_apk_file}" == true || "${has_apk_url}" == true) && "${has_issuer_url}" == true ]]; then
-    err "wallet inputs ('apk-file' or 'apk-url') and issuer inputs ('issuer-url' and 'issuer-id') are mutually exclusive."
+    err "wallet inputs ('apk-file' or 'apk-url') and issuer inputs ('issuer-url' and 'credential-ids') are mutually exclusive."
   fi
 
   if [[ "${has_apk_file}" == false && "${has_apk_url}" == false && "${has_issuer_url}" == false ]]; then
-    err "provide either exactly one of 'apk-url' or 'apk-file', or both 'issuer-url' and 'issuer-id'."
+    err "provide either exactly one of 'apk-url' or 'apk-file', or both 'issuer-url' and 'credential-ids'."
   fi
 
   if [[ "${has_apk_file}" == true ]]; then
@@ -179,6 +190,16 @@ validate_target_inputs() {
   fi
 
   printf '%s' "issuer"
+}
+
+json_array_from_lines() {
+  local lines="$1"
+
+  jq -R -s -c '
+    split("\n")
+    | map(gsub("^[[:space:]]+|[[:space:]]+$"; ""))
+    | map(select(length > 0))
+  ' <<< "${lines}"
 }
 
 build_metadata() {

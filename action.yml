@@ -20,9 +20,10 @@ inputs:
       URL of the Issuer that will be tested by Credimi.
       Required when testing an Issuer.
     required: false
-  issuer-id:
+  credential-ids:
     description: |
-      Credimi issuer identifier.
+      Credimi credential identifiers where to substitute the issuer URL with issuer-url, separated by new lines.
+      Each identifier is usually formatted as "organization/issuer/credential".
       Required when testing an Issuer.
     required: false
   pipeline-ids:
@@ -34,7 +35,9 @@ inputs:
     description: |
       Credimi runner types to use, separated by new lines.
       The action runs every pipeline-id on every listed runner type.
-      Exactly one of runner-types or runner-ids must be provided.
+      Required when testing a wallet unless runner-ids is provided.
+      Optional when testing an Issuer.
+      Mutually exclusive with runner-ids.
       Possible values: android_emulator, redroid, android_phone, ios_simulator
     required: false
   runner-ids:
@@ -42,18 +45,22 @@ inputs:
       Credimi runner ids with their runner type, separated by new lines.
       Each line must be formatted as "<runner-id>/<runner-type>".
       The action runs every pipeline-id on every listed runner id.
-      Exactly one of runner-types or runner-ids must be provided.
+      Required when testing a wallet unless runner-types is provided.
+      Optional when testing an Issuer.
+      Mutually exclusive with runner-types.
       Possible runner-type values: android_emulator, redroid, android_phone, ios_simulator
     required: false
   extra-runs:
     description: |
       Additional runs to add after the cartesian product is built, separated by new lines.
       Each line must contain "<pipeline-id> <runner-type>" or "<pipeline-id> <runner-id>/<runner-type>".
+      When testing an Issuer without runner inputs, each line can contain just "<pipeline-id>".
     required: false
   exclude-runs:
     description: |
       Runs to remove after extra-runs are added, separated by new lines.
       Each line must contain "<pipeline-id> <runner-type>" or "<pipeline-id> <runner-id>/<runner-type>".
+      When testing an Issuer without runner inputs, each line can contain just "<pipeline-id>".
       Exclusions match exact pipeline/runner pairs.
     required: false
   api-base-url:
@@ -76,7 +83,7 @@ runs:
         CREDIMI_APK_FILE: ${{ inputs.apk-file }}
         CREDIMI_APK_URL: ${{ inputs.apk-url }}
         CREDIMI_ISSUER_URL: ${{ inputs.issuer-url }}
-        CREDIMI_ISSUER_ID: ${{ inputs.issuer-id }}
+        CREDIMI_CREDENTIAL_IDS: ${{ inputs.credential-ids }}
         CREDIMI_API_BASE_URL: ${{ inputs.api-base-url }}
         GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |

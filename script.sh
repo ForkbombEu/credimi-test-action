@@ -21,7 +21,7 @@ if ! is_blank "${CREDIMI_RUNNER_IDS:-}"; then
   has_runner_ids=true
 fi
 
-if [[ "${has_runner_types}" == false && "${has_runner_ids}" == false ]]; then
+if [[ "${test_target}" == "wallet" && "${has_runner_types}" == false && "${has_runner_ids}" == false ]]; then
   err "exactly one of 'runner-types' or 'runner-ids' must be provided."
 fi
 
@@ -46,6 +46,11 @@ declare -A run_seen=()
 declare -A run_pipeline_ids=()
 declare -A run_runner_types=()
 declare -A run_runner_ids=()
+allow_pipeline_only_runs=false
+
+if [[ "${test_target}" == "issuer" ]]; then
+  allow_pipeline_only_runs=true
+fi
 
 if [[ "${has_runner_types}" == true ]]; then
   while IFS= read -r runner_type || [[ -n "${runner_type}" ]]; do
@@ -62,7 +67,7 @@ if [[ "${has_runner_types}" == true ]]; then
       add_run "${pipeline_id}" "${runner_type}"
     done
   done <<< "${CREDIMI_RUNNER_TYPES}"
-else
+elif [[ "${has_runner_ids}" == true ]]; then
   while IFS= read -r runner_spec || [[ -n "${runner_spec}" ]]; do
     runner_spec="$(trim "${runner_spec}")"
     if [[ -z "${runner_spec}" ]]; then
@@ -78,14 +83,18 @@ else
       add_run "${pipeline_id}" "${runner_type}" "${runner_id}"
     done
   done <<< "${CREDIMI_RUNNER_IDS}"
+else
+  for pipeline_id in "${pipeline_ids[@]}"; do
+    add_run "${pipeline_id}"
+  done
 fi
 
 if ! is_blank "${CREDIMI_EXTRA_RUNS:-}"; then
-  add_runs_from_lines "${CREDIMI_EXTRA_RUNS}" "extra-runs" "add"
+  add_runs_from_lines "${CREDIMI_EXTRA_RUNS}" "extra-runs" "add" "${allow_pipeline_only_runs}"
 fi
 
 if ! is_blank "${CREDIMI_EXCLUDE_RUNS:-}"; then
-  add_runs_from_lines "${CREDIMI_EXCLUDE_RUNS}" "exclude-runs" "remove"
+  add_runs_from_lines "${CREDIMI_EXCLUDE_RUNS}" "exclude-runs" "remove" "${allow_pipeline_only_runs}"
 fi
 
 if [[ "$(active_run_count)" -eq 0 ]]; then
@@ -95,6 +104,11 @@ fi
 api_base_url="${CREDIMI_API_BASE_URL:-https://credimi.io}"
 api_base_url="${api_base_url%/}"
 metadata="$(build_metadata)"
+credential_ids="[]"
+
+if [[ "${test_target}" == "issuer" ]]; then
+  credential_ids="$(json_array_from_lines "${CREDIMI_CREDENTIAL_IDS}")"
+fi
 
 for key in "${run_keys[@]}"; do
   if [[ -z "${run_seen[${key}]:-}" ]]; then
@@ -111,16 +125,16 @@ for key in "${run_keys[@]}"; do
       --arg runner_type "${runner_type}" \
       --arg runner_id "${runner_id}" \
       --arg issuer_url "${CREDIMI_ISSUER_URL}" \
-      --arg issuer_id "${CREDIMI_ISSUER_ID}" \
+      --argjson credential_ids "${credential_ids}" \
       --argjson metadata "${metadata}" \
       '
       {
         pipeline_identifier: $pipeline_identifier,
-        runner_type: $runner_type,
         issuer_url: $issuer_url,
-        issuer_id: $issuer_id,
+        credential_ids: $credential_ids,
         metadata: $metadata
       }
+      + if $runner_type == "" then {} else { runner_type: $runner_type } end
       + if $runner_id == "" then {} else { runner_id: $runner_id } end'
     )"
 

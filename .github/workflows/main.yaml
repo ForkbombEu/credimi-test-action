@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: 🛎️  Checkout
         uses: actions/checkout@v6
-      - name: 🧪 Run the pipeline
+      - name: 🧪 Run the wallet pipeline
         uses: ./
         with:
           api-key: ${{ secrets.CREDIMI_API_KEY }}
@@ -26,3 +26,13 @@ jobs:
             forkbomb-bv-andrea/eudiw-2026-02-35-pid-issue-x2-and-verify-x1-issuer-eudiw-dev-test1 forkbomb-bv-andrea/pixel-android16-a2/android_phone
           exclude-runs: |
             forkbomb-bv-andrea/eudiw-12-34-webuild-conformance-check android_emulator
+      - name: 🪪 Run the issuer pipeline
+        uses: ./
+        with:
+          api-key: ${{ secrets.CREDIMI_API_KEY }}
+          issuer-url: https://backend.issuer.eudiw.dev/credential_offer_create
+          credential-ids: |
+            forkbomb-bv-andrea/misc-issuer-integration-demo/eudiw-pid-pid-vc-sd-jwt-haip-vci
+            forkbomb-bv-andrea/misc-issuer-integration-demo/eudiw-pid-mdoc-haip-vci
+          pipeline-ids: |
+            forkbomb-bv-andrea/test-openidvci-issuer-1
