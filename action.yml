@@ -8,12 +8,22 @@ inputs:
   apk-file:
     description: |
       Path to a local APK file to upload.
-      Exactly one of apk-file or apk-url must be provided.
+      Exactly one of apk-file or apk-url must be provided when testing a wallet.
     required: false
   apk-url:
     description: |
       URL of an APK that Credimi can download.
-      Exactly one of apk-file or apk-url must be provided.
+      Exactly one of apk-file or apk-url must be provided when testing a wallet.
+    required: false
+  issuer-url:
+    description: |
+      URL of the Issuer that will be tested by Credimi.
+      Required when testing an Issuer.
+    required: false
+  issuer-id:
+    description: |
+      Credimi issuer identifier.
+      Required when testing an Issuer.
     required: false
   pipeline-ids:
     description: |
@@ -65,6 +75,8 @@ runs:
         CREDIMI_RUNNER_IDS: ${{ inputs.runner-ids }}
         CREDIMI_APK_FILE: ${{ inputs.apk-file }}
         CREDIMI_APK_URL: ${{ inputs.apk-url }}
+        CREDIMI_ISSUER_URL: ${{ inputs.issuer-url }}
+        CREDIMI_ISSUER_ID: ${{ inputs.issuer-id }}
         CREDIMI_API_BASE_URL: ${{ inputs.api-base-url }}
         GITHUB_CONTEXT: ${{ toJson(github) }}
       run: |

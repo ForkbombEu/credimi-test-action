@@ -1,152 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ -z "${CREDIMI_APK_URL:-}" && -z "${CREDIMI_APK_FILE:-}" ]]; then
-  echo "Error: exactly one of 'apk-url' or 'apk-file' must be provided." >&2
-  exit 1
-fi
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${script_dir}/credimi-utils.sh"
 
-if [[ -n "${CREDIMI_APK_URL:-}" && -n "${CREDIMI_APK_FILE:-}" ]]; then
-  echo "Error: 'apk-url' and 'apk-file' are mutually exclusive." >&2
-  exit 1
-fi
-
-is_blank() {
-  [[ -z "${1//[[:space:]]/}" ]]
-}
-
-trim() {
-  local value="$1"
-  value="${value#"${value%%[![:space:]]*}"}"
-  value="${value%"${value##*[![:space:]]}"}"
-  printf '%s' "${value}"
-}
-
-is_valid_runner_type() {
-  case "$1" in
-    android_emulator|redroid|android_phone|ios_simulator)
-      return 0
-      ;;
-    *)
-      return 1
-      ;;
-  esac
-}
-
-parse_runner_spec() {
-  local runner_spec="$1"
-  local -n out_runner_id="$2"
-  local -n out_runner_type="$3"
-
-  out_runner_id=""
-  out_runner_type=""
-
-  if is_valid_runner_type "${runner_spec}"; then
-    out_runner_type="${runner_spec}"
-    return 0
-  fi
-
-  if [[ "${runner_spec}" != */* ]]; then
-    echo "Error: runner must be a runner type or formatted as 'runner-id/runner-type': ${runner_spec}" >&2
-    exit 1
-  fi
-
-  out_runner_id="${runner_spec%/*}"
-  out_runner_type="${runner_spec##*/}"
-
-  if [[ -z "${out_runner_id}" ]]; then
-    echo "Error: runner id cannot be empty in runner spec: ${runner_spec}" >&2
-    exit 1
-  fi
-
-  if ! is_valid_runner_type "${out_runner_type}"; then
-    echo "Error: runner type must be one of: android_emulator, redroid, android_phone, ios_simulator." >&2
-    exit 1
-  fi
-}
-
-declare -a run_keys=()
-declare -A run_seen=()
-declare -A run_pipeline_ids=()
-declare -A run_runner_types=()
-declare -A run_runner_ids=()
-
-make_run_key() {
-  local pipeline_id="$1"
-  local runner_type="$2"
-  local runner_id="$3"
-
-  printf '%s\t%s\t%s' "${pipeline_id}" "${runner_type}" "${runner_id}"
-}
-
-add_run() {
-  local pipeline_id="$1"
-  local runner_type="$2"
-  local runner_id="${3:-}"
-  local key
-
-  if [[ -z "${pipeline_id}" ]]; then
-    echo "Error: pipeline id cannot be empty." >&2
-    exit 1
-  fi
-
-  if ! is_valid_runner_type "${runner_type}"; then
-    echo "Error: runner type must be one of: android_emulator, redroid, android_phone, ios_simulator." >&2
-    exit 1
-  fi
-
-  key="$(make_run_key "${pipeline_id}" "${runner_type}" "${runner_id}")"
-  if [[ -n "${run_seen[${key}]:-}" ]]; then
-    return 0
-  fi
-
-  run_seen["${key}"]=1
-  run_pipeline_ids["${key}"]="${pipeline_id}"
-  run_runner_types["${key}"]="${runner_type}"
-  run_runner_ids["${key}"]="${runner_id}"
-  run_keys+=("${key}")
-}
-
-remove_run() {
-  local pipeline_id="$1"
-  local runner_type="$2"
-  local runner_id="${3:-}"
-  local key
-
-  key="$(make_run_key "${pipeline_id}" "${runner_type}" "${runner_id}")"
-  unset "run_seen[${key}]"
-}
-
-add_runs_from_lines() {
-  local lines="$1"
-  local source_name="$2"
-  local mode="$3"
-  local line pipeline_id runner_spec extra runner_id runner_type
-
-  while IFS= read -r line || [[ -n "${line}" ]]; do
-    line="$(trim "${line}")"
-    if [[ -z "${line}" ]]; then
-      continue
-    fi
-
-    read -r pipeline_id runner_spec extra <<< "${line}"
-    if [[ -z "${pipeline_id}" || -z "${runner_spec}" || -n "${extra:-}" ]]; then
-      echo "Error: each ${source_name} line must contain exactly: '<pipeline-id> <runner-type|runner-id/runner-type>'." >&2
-      exit 1
-    fi
-
-    parse_runner_spec "${runner_spec}" runner_id runner_type
-    if [[ "${mode}" == "add" ]]; then
-      add_run "${pipeline_id}" "${runner_type}" "${runner_id}"
-    else
-      remove_run "${pipeline_id}" "${runner_type}" "${runner_id}"
-    fi
-  done <<< "${lines}"
-}
+test_target="$(validate_target_inputs)"
 
 if is_blank "${CREDIMI_PIPELINE_IDS:-}"; then
-  echo "Error: at least one pipeline id must be provided in 'pipeline-ids'." >&2
-  exit 1
+  err "at least one pipeline id must be provided in 'pipeline-ids'."
 fi
 
 has_runner_types=false
@@ -161,13 +22,11 @@ if ! is_blank "${CREDIMI_RUNNER_IDS:-}"; then
 fi
 
 if [[ "${has_runner_types}" == false && "${has_runner_ids}" == false ]]; then
-  echo "Error: exactly one of 'runner-types' or 'runner-ids' must be provided." >&2
-  exit 1
+  err "exactly one of 'runner-types' or 'runner-ids' must be provided."
 fi
 
 if [[ "${has_runner_types}" == true && "${has_runner_ids}" == true ]]; then
-  echo "Error: 'runner-types' and 'runner-ids' are mutually exclusive." >&2
-  exit 1
+  err "'runner-types' and 'runner-ids' are mutually exclusive."
 fi
 
 declare -a pipeline_ids=()
@@ -179,9 +38,14 @@ while IFS= read -r pipeline_id || [[ -n "${pipeline_id}" ]]; do
 done <<< "${CREDIMI_PIPELINE_IDS}"
 
 if [[ "${#pipeline_ids[@]}" -eq 0 ]]; then
-  echo "Error: at least one pipeline id must be provided in 'pipeline-ids'." >&2
-  exit 1
+  err "at least one pipeline id must be provided in 'pipeline-ids'."
 fi
+
+declare -a run_keys=()
+declare -A run_seen=()
+declare -A run_pipeline_ids=()
+declare -A run_runner_types=()
+declare -A run_runner_ids=()
 
 if [[ "${has_runner_types}" == true ]]; then
   while IFS= read -r runner_type || [[ -n "${runner_type}" ]]; do
@@ -191,8 +55,7 @@ if [[ "${has_runner_types}" == true ]]; then
     fi
 
     if ! is_valid_runner_type "${runner_type}"; then
-      echo "Error: runner type must be one of: android_emulator, redroid, android_phone, ios_simulator." >&2
-      exit 1
+      err "runner type must be one of: android_emulator, redroid, android_phone, ios_simulator."
     fi
 
     for pipeline_id in "${pipeline_ids[@]}"; do
@@ -208,8 +71,7 @@ else
 
     parse_runner_spec "${runner_spec}" runner_id runner_type
     if [[ -z "${runner_id}" ]]; then
-      echo "Error: runner ids must be formatted as 'runner-id/runner-type'." >&2
-      exit 1
+      err "runner ids must be formatted as 'runner-id/runner-type'."
     fi
 
     for pipeline_id in "${pipeline_ids[@]}"; do
@@ -226,44 +88,13 @@ if ! is_blank "${CREDIMI_EXCLUDE_RUNS:-}"; then
   add_runs_from_lines "${CREDIMI_EXCLUDE_RUNS}" "exclude-runs" "remove"
 fi
 
-wallet_run_endpoint="${CREDIMI_API_BASE_URL:-https://credimi.io}"
-wallet_run_endpoint="${wallet_run_endpoint%/}/api/pipeline/run-wallet-apk"
-
-github_context="${GITHUB_CONTEXT:-}"
-if [[ -z "${github_context}" ]]; then
-  github_context="{}"
+if [[ "$(active_run_count)" -eq 0 ]]; then
+  err "no pipeline runs remain after applying 'exclude-runs'."
 fi
 
-metadata="$(
-  jq -c \
-    '
-    del(
-      .token,
-      .event.repository.owner.email,
-      .event.sender.email,
-      .event.pusher.email
-    )
-    ' <<< "${github_context}"
-)"
-
-active_run_count=0
-for key in "${run_keys[@]}"; do
-  if [[ -n "${run_seen[${key}]:-}" ]]; then
-    active_run_count=$((active_run_count + 1))
-  fi
-done
-
-if [[ "${active_run_count}" -eq 0 ]]; then
-  echo "Error: no pipeline runs remain after applying 'exclude-runs'." >&2
-  exit 1
-fi
-
-if [[ -n "${CREDIMI_APK_FILE:-}" ]]; then
-  if [[ ! -f "${CREDIMI_APK_FILE}" ]]; then
-    echo "Error: APK file does not exist: ${CREDIMI_APK_FILE}" >&2
-    exit 1
-  fi
-fi
+api_base_url="${CREDIMI_API_BASE_URL:-https://credimi.io}"
+api_base_url="${api_base_url%/}"
+metadata="$(build_metadata)"
 
 for key in "${run_keys[@]}"; do
   if [[ -z "${run_seen[${key}]:-}" ]]; then
@@ -274,7 +105,31 @@ for key in "${run_keys[@]}"; do
   runner_type="${run_runner_types[${key}]}"
   runner_id="${run_runner_ids[${key}]}"
 
-  if [[ -n "${CREDIMI_APK_URL:-}" ]]; then
+  if [[ "${test_target}" == "issuer" ]]; then
+    payload="$(jq -n \
+      --arg pipeline_identifier "${pipeline_id}" \
+      --arg runner_type "${runner_type}" \
+      --arg runner_id "${runner_id}" \
+      --arg issuer_url "${CREDIMI_ISSUER_URL}" \
+      --arg issuer_id "${CREDIMI_ISSUER_ID}" \
+      --argjson metadata "${metadata}" \
+      '
+      {
+        pipeline_identifier: $pipeline_identifier,
+        runner_type: $runner_type,
+        issuer_url: $issuer_url,
+        issuer_id: $issuer_id,
+        metadata: $metadata
+      }
+      + if $runner_id == "" then {} else { runner_id: $runner_id } end'
+    )"
+
+    response="$(curl --fail-with-body --silent --show-error \
+      --request POST "${api_base_url}/api/pipeline/run-issuer" \
+      --header "Credimi-Api-Key: ${CREDIMI_API_KEY}" \
+      --header "Content-Type: application/json" \
+      --data "${payload}")"
+  elif ! is_blank "${CREDIMI_APK_URL:-}"; then
     payload="$(jq -n \
       --arg pipeline_identifier "${pipeline_id}" \
       --arg runner_type "${runner_type}" \
@@ -292,7 +147,7 @@ for key in "${run_keys[@]}"; do
     )"
 
     response="$(curl --fail-with-body --silent --show-error \
-      --request POST "${wallet_run_endpoint}" \
+      --request POST "${api_base_url}/api/pipeline/run-wallet-apk" \
       --header "Credimi-Api-Key: ${CREDIMI_API_KEY}" \
       --header "Content-Type: application/json" \
       --data "${payload}")"
@@ -301,7 +156,7 @@ for key in "${run_keys[@]}"; do
       --fail-with-body
       --silent
       --show-error
-      --request POST "${wallet_run_endpoint}"
+      --request POST "${api_base_url}/api/pipeline/run-wallet-apk"
       --header "Credimi-Api-Key: ${CREDIMI_API_KEY}"
       --form "pipeline_identifier=${pipeline_id}"
       --form "runner_type=${runner_type}"
