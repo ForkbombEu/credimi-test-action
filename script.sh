@@ -110,6 +110,24 @@ if [[ "${test_target}" == "issuer" ]]; then
   credential_ids="$(json_array_from_lines "${CREDIMI_CREDENTIAL_IDS}")"
 fi
 
+run_curl() {
+  local response
+  local status
+
+  if response="$(curl "$@")"; then
+    printf '%s' "${response}"
+    return 0
+  else
+    status=$?
+  fi
+
+  if [[ -n "${response}" ]]; then
+    printf 'Credimi API error response:\n%s\n' "${response}" >&2
+  fi
+
+  return "${status}"
+}
+
 for key in "${run_keys[@]}"; do
   if [[ -z "${run_seen[${key}]:-}" ]]; then
     continue
@@ -138,7 +156,7 @@ for key in "${run_keys[@]}"; do
       + if $runner_id == "" then {} else { runner_id: $runner_id } end'
     )"
 
-    response="$(curl --fail-with-body --silent --show-error \
+    response="$(run_curl --fail-with-body --silent --show-error \
       --request POST "${api_base_url}/api/pipeline/run-issuer" \
       --header "Credimi-Api-Key: ${CREDIMI_API_KEY}" \
       --header "Content-Type: application/json" \
@@ -160,7 +178,7 @@ for key in "${run_keys[@]}"; do
       + if $runner_id == "" then {} else { runner_id: $runner_id } end'
     )"
 
-    response="$(curl --fail-with-body --silent --show-error \
+    response="$(run_curl --fail-with-body --silent --show-error \
       --request POST "${api_base_url}/api/pipeline/run-wallet-apk" \
       --header "Credimi-Api-Key: ${CREDIMI_API_KEY}" \
       --header "Content-Type: application/json" \
@@ -182,7 +200,7 @@ for key in "${run_keys[@]}"; do
       curl_args+=(--form "runner_id=${runner_id}")
     fi
 
-    response="$(curl "${curl_args[@]}")"
+    response="$(run_curl "${curl_args[@]}")"
   fi
 
   echo "${response}"
