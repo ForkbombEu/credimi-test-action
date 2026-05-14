@@ -23,7 +23,7 @@ jobs:
             android_emulator
             redroid
           extra-runs: |
-            forkbomb-bv-andrea/eudiw-2026-02-35-pid-issue-x2-and-verify-x1-issuer-eudiw-dev-test1 forkbomb-bv-andrea/pixel-android16-a2/android_phone
+            forkbomb-bv-andrea/eudiw-2026-02-35-pid-issue-x2-and-verify-x1-issuer-eudiw-dev-test2 forkbomb-bv-andrea/pixel-android16-a2/android_phone
           exclude-runs: |
             forkbomb-bv-andrea/eudiw-12-34-webuild-conformance-check android_emulator
       - name: 🪪 Run the issuer pipeline
