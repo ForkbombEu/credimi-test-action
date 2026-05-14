@@ -142,6 +142,11 @@ validate_target_inputs() {
   local has_apk_url=false
   local has_issuer_url=false
   local has_credential_ids=false
+  local has_verifier_url=false
+  local has_use_case_ids=false
+  local has_wallet_inputs=false
+  local has_issuer_inputs=false
+  local has_verifier_inputs=false
 
   if ! is_blank "${CREDIMI_APK_FILE:-}"; then
     has_apk_file=true
@@ -159,6 +164,14 @@ validate_target_inputs() {
     has_credential_ids=true
   fi
 
+  if ! is_blank "${CREDIMI_VERIFIER_URL:-}"; then
+    has_verifier_url=true
+  fi
+
+  if ! is_blank "${CREDIMI_USE_CASE_IDS:-}"; then
+    has_use_case_ids=true
+  fi
+
   if [[ "${has_apk_file}" == true && "${has_apk_url}" == true ]]; then
     err "'apk-url' and 'apk-file' are mutually exclusive."
   fi
@@ -167,12 +180,30 @@ validate_target_inputs() {
     err "'issuer-url' and 'credential-ids' must be provided together."
   fi
 
-  if [[ ("${has_apk_file}" == true || "${has_apk_url}" == true) && "${has_issuer_url}" == true ]]; then
-    err "wallet inputs ('apk-file' or 'apk-url') and issuer inputs ('issuer-url' and 'credential-ids') are mutually exclusive."
+  if [[ "${has_verifier_url}" != "${has_use_case_ids}" ]]; then
+    err "'verifier-url' and 'use-case-ids' must be provided together."
   fi
 
-  if [[ "${has_apk_file}" == false && "${has_apk_url}" == false && "${has_issuer_url}" == false ]]; then
-    err "provide either exactly one of 'apk-url' or 'apk-file', or both 'issuer-url' and 'credential-ids'."
+  if [[ "${has_apk_file}" == true || "${has_apk_url}" == true ]]; then
+    has_wallet_inputs=true
+  fi
+
+  if [[ "${has_issuer_url}" == true ]]; then
+    has_issuer_inputs=true
+  fi
+
+  if [[ "${has_verifier_url}" == true ]]; then
+    has_verifier_inputs=true
+  fi
+
+  if [[ ("${has_wallet_inputs}" == true && "${has_issuer_inputs}" == true) ||
+        ("${has_wallet_inputs}" == true && "${has_verifier_inputs}" == true) ||
+        ("${has_issuer_inputs}" == true && "${has_verifier_inputs}" == true) ]]; then
+    err "wallet inputs ('apk-file' or 'apk-url'), issuer inputs ('issuer-url' and 'credential-ids'), and verifier inputs ('verifier-url' and 'use-case-ids') are mutually exclusive."
+  fi
+
+  if [[ "${has_wallet_inputs}" == false && "${has_issuer_inputs}" == false && "${has_verifier_inputs}" == false ]]; then
+    err "provide either exactly one of 'apk-url' or 'apk-file', both 'issuer-url' and 'credential-ids', or both 'verifier-url' and 'use-case-ids'."
   fi
 
   if [[ "${has_apk_file}" == true ]]; then
@@ -189,7 +220,12 @@ validate_target_inputs() {
     return 0
   fi
 
-  printf '%s' "issuer"
+  if [[ "${has_issuer_inputs}" == true ]]; then
+    printf '%s' "issuer"
+    return 0
+  fi
+
+  printf '%s' "verifier"
 }
 
 json_array_from_lines() {

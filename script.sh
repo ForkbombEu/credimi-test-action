@@ -48,7 +48,7 @@ declare -A run_runner_types=()
 declare -A run_runner_ids=()
 allow_pipeline_only_runs=false
 
-if [[ "${test_target}" == "issuer" ]]; then
+if [[ "${test_target}" == "issuer" || "${test_target}" == "verifier" ]]; then
   allow_pipeline_only_runs=true
 fi
 
@@ -105,9 +105,12 @@ api_base_url="${CREDIMI_API_BASE_URL:-https://credimi.io}"
 api_base_url="${api_base_url%/}"
 metadata="$(build_metadata)"
 credential_ids="[]"
+use_case_ids="[]"
 
 if [[ "${test_target}" == "issuer" ]]; then
   credential_ids="$(json_array_from_lines "${CREDIMI_CREDENTIAL_IDS}")"
+elif [[ "${test_target}" == "verifier" ]]; then
+  use_case_ids="$(json_array_from_lines "${CREDIMI_USE_CASE_IDS}")"
 fi
 
 run_curl() {
@@ -158,6 +161,30 @@ for key in "${run_keys[@]}"; do
 
     response="$(run_curl --fail-with-body --silent --show-error \
       --request POST "${api_base_url}/api/pipeline/run-issuer" \
+      --header "Credimi-Api-Key: ${CREDIMI_API_KEY}" \
+      --header "Content-Type: application/json" \
+      --data "${payload}")"
+  elif [[ "${test_target}" == "verifier" ]]; then
+    payload="$(jq -n \
+      --arg pipeline_identifier "${pipeline_id}" \
+      --arg runner_type "${runner_type}" \
+      --arg runner_id "${runner_id}" \
+      --arg verifier_url "${CREDIMI_VERIFIER_URL}" \
+      --argjson use_case_ids "${use_case_ids}" \
+      --argjson metadata "${metadata}" \
+      '
+      {
+        pipeline_identifier: $pipeline_identifier,
+        verifier_url: $verifier_url,
+        use_case_ids: $use_case_ids,
+        metadata: $metadata
+      }
+      + if $runner_type == "" then {} else { runner_type: $runner_type } end
+      + if $runner_id == "" then {} else { runner_id: $runner_id } end'
+    )"
+
+    response="$(run_curl --fail-with-body --silent --show-error \
+      --request POST "${api_base_url}/api/pipeline/run-verifier" \
       --header "Credimi-Api-Key: ${CREDIMI_API_KEY}" \
       --header "Content-Type: application/json" \
       --data "${payload}")"
