@@ -7,7 +7,7 @@
 
 # Credimi Test Action <!-- omit in toc -->
 
-### Run [Credimi](https://github.com/ForkbombEu/credimi) pipelines from GitHub Actions to test wallets as part of your CI workflow. <!-- omit in toc -->
+### Run [Credimi](https://github.com/ForkbombEu/credimi) pipelines from GitHub Actions to test wallets, credential issuers, and verifiers as part of your CI workflow. <!-- omit in toc -->
 
 </div>
 
@@ -16,6 +16,8 @@
 This action starts a Credimi pipeline execution and passes GitHub workflow metadata to Credimi so runs can be traced back to the repository, workflow, commit, and pull request that triggered them. It helps teams validate identity and credential flows automatically instead of relying only on manual QA. You can use this action to:
 
 - Test mobile apps built in CI using the same **automation pipeline(s)** on every pull request.
+- Test credential issuers by substituting their issuer URL into one or more **credential definitions**.
+- Test verifiers by substituting their verifier URL into one or more **use cases**.
 - **Pinpoint bugs** and failures to the exact commit, **through the pipeline run(s)** output.
 
 <br>
@@ -32,6 +34,8 @@ This action starts a Credimi pipeline execution and passes GitHub workflow metad
 - [🎮 Usage](#-usage)
   - [📂 Test a locally built APK](#-test-a-locally-built-apk)
   - [🌐 Test an APK by URL](#-test-an-apk-by-url)
+  - [🏛️ Test a credential issuer](#️-test-a-credential-issuer)
+  - [🛂 Test a verifier](#-test-a-verifier)
 - [⌨️ Inputs](#️-inputs)
 - [🥷 Advanced usage](#-advanced-usage)
   - [👟 Choose specific runners](#-choose-specific-runners)
@@ -142,28 +146,92 @@ This example starts **4 pipeline runs**:
 1. `your-org/your-pipeline` on runner of type `redroid`
 1. `your-org/another-pipeline` on runner of type `redroid`
 
+### 🏛️ Test a credential issuer
+
+```yaml
+name: Credimi issuer tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  credimi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: forkbombeu/credimi-test-action@v1
+        with:
+          api-key: ${{ secrets.CREDIMI_API_KEY }}
+          pipeline-ids: |
+            your-org/your-issuer-pipeline
+          issuer-url: https://issuer.example.com
+          credential-ids: |
+            your-org/your-issuer/your-credential
+            your-org/your-issuer/another-credential
+```
+
+This example starts one issuer pipeline run.
+Credimi receives the issuer URL and the listed credential identifiers as an array, so the same issuer can be tested against multiple credential definitions.
+
+### 🛂 Test a verifier
+
+```yaml
+name: Credimi verifier tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  credimi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: forkbombeu/credimi-test-action@v1
+        with:
+          api-key: ${{ secrets.CREDIMI_API_KEY }}
+          pipeline-ids: |
+            your-org/your-verifier-pipeline
+          verifier-url: https://verifier.example.com
+          use-case-ids: |
+            your-org/your-verifier/your-use-case
+            your-org/your-verifier/another-use-case
+```
+
+This example starts one verifier pipeline run.
+Credimi receives the verifier URL and the listed use case identifiers as an array, so the same verifier can be tested against multiple use cases.
+
 **[🔝 back to top](#toc)**
 
 ---
 
 ## ⌨️ Inputs
 
-| Input          | Required | Description                                                                                                             |
-| -------------- | -------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `api-key`      | Yes      | Credimi API key. Store it as a GitHub Actions secret.                                                                   |
-| `pipeline-ids` | Yes      | Newline-separated Credimi pipeline identifiers, for example `your-org/your-pipeline`.                                   |
-| `runner-types` | No       | Newline-separated runner types. One of `android_emulator`, `redroid`, `android_phone`, `ios_simulator`.                 |
-| `runner-ids`   | No       | Newline-separated specific runners formatted as `<runner-id>/<runner-type>`.                                            |
-| `extra-runs`   | No       | Newline-separated runs to add, formatted as `<pipeline-id> <runner-type>` or `<pipeline-id> <runner-id>/<runner-type>`. |
-| `exclude-runs` | No       | Newline-separated runs to remove, using the same format as `extra-runs`. Exclusions match exact runs.                   |
-| `apk-file`     | No       | Path to a locally built APK artifact in the workflow workspace.                                                         |
-| `apk-url`      | No       | URL where Credimi can fetch the APK.                                                                                    |
-| `api-base-url` | No       | Credimi API base URL. Defaults to `https://credimi.io`.                                                                 |
+| Input            | Required | Description                                                                                                                                              |
+| ---------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `api-key`        | Yes      | Credimi API key. Store it as a GitHub Actions secret.                                                                                                    |
+| `pipeline-ids`   | Yes      | Newline-separated Credimi pipeline identifiers, for example `your-org/your-pipeline`.                                                                    |
+| `runner-types`   | No       | Newline-separated runner types. One of `android_emulator`, `redroid`, `android_phone`, `ios_simulator`.                                                  |
+| `runner-ids`     | No       | Newline-separated specific runners formatted as `<runner-id>/<runner-type>`.                                                                             |
+| `extra-runs`     | No       | Newline-separated runs to add. Wallet lines use `<pipeline-id> <runner-type>` or `<pipeline-id> <runner-id>/<runner-type>`. Issuer and verifier lines can also be just `<pipeline-id>`. |
+| `exclude-runs`   | No       | Newline-separated runs to remove, using the same format as `extra-runs`. Exclusions match exact runs.                                                    |
+| `apk-file`       | No       | Path to a locally built APK artifact in the workflow workspace.                                                                                          |
+| `apk-url`        | No       | URL where Credimi can fetch the APK.                                                                                                                     |
+| `issuer-url`     | No       | URL of the credential issuer that Credimi will test.                                                                                                     |
+| `credential-ids` | No       | Newline-separated credential identifiers, for example `your-org/your-issuer/your-credential`.                                                            |
+| `verifier-url`   | No       | URL of the verifier that Credimi will test.                                                                                                              |
+| `use-case-ids`   | No       | Newline-separated use case identifiers, for example `your-org/your-verifier/your-use-case`.                                                              |
+| `api-base-url`   | No       | Credimi API base URL. Defaults to `https://credimi.io`.                                                                                                  |
 
-Exactly one of `apk-file` or `apk-url` must be provided.
-Exactly one of `runner-types` or `runner-ids` must be provided.
+Provide wallet, issuer, or verifier inputs:
 
-The action first builds the cartesian product of `pipeline-ids` and either `runner-types` or `runner-ids`.
+- Wallet tests require exactly one of `apk-file` or `apk-url`.
+- Issuer tests require both `issuer-url` and `credential-ids`.
+- Verifier tests require both `verifier-url` and `use-case-ids`.
+- Wallet, issuer, and verifier inputs are mutually exclusive.
+
+For wallet tests, exactly one of `runner-types` or `runner-ids` must be provided.
+For issuer and verifier tests, `runner-types` and `runner-ids` are optional, but they are still mutually exclusive when used.
+
+For wallet tests, the action first builds the cartesian product of `pipeline-ids` and either `runner-types` or `runner-ids`.
+For issuer and verifier tests without runner inputs, the action starts one run for each `pipeline-ids` entry.
 Then it adds `extra-runs`, removes `exclude-runs`, and sends one request to Credimi for each remaining run.
 
 **[🔝 back to top](#toc)**
@@ -215,6 +283,23 @@ Use `extra-runs` to add runs outside the generated cartesian product. Use `exclu
 ```
 
 In this example, the action starts the generated pipeline/runner-type combinations, adds one specific phone run, and removes the `another-pipeline` run on `redroid`.
+
+For issuer and verifier tests without runner inputs, `extra-runs` and `exclude-runs` can contain just pipeline identifiers.
+
+```yaml
+- uses: forkbombeu/credimi-test-action@v1
+  with:
+    api-key: ${{ secrets.CREDIMI_API_KEY }}
+    pipeline-ids: |
+      your-org/your-issuer-pipeline
+    issuer-url: https://issuer.example.com
+    credential-ids: |
+      your-org/your-issuer/your-credential
+    extra-runs: |
+      your-org/another-issuer-pipeline
+    exclude-runs: |
+      your-org/your-issuer-pipeline
+```
 
 ### 📡 Use a custom API base URL
 
